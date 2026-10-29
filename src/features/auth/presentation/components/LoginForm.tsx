@@ -2,36 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { TextField } from '@/src/core/components/ui/TextField';
+import { FieldErrors } from '@/src/core/errors/validation.error';
+import { LoginParams } from '../../domain/repositories/auth.repository';
 import { AuthCard } from './AuthCard';
 
-interface LoginErrors {
-    email?: string;
-    password?: string;
+interface LoginFormProps {
+    onSubmit: (params: LoginParams) => Promise<boolean>;
+    isLoading: boolean;
+    fieldErrors: FieldErrors;
+    errorMessage: string | null;
 }
 
-export function LoginForm() {
-    const router = useRouter();
-
-    // Estado local del formulario (no hay backend ni autenticación real)
+export function LoginForm({ onSubmit, isLoading, fieldErrors, errorMessage }: LoginFormProps) {
+    // Estado local: solo lo que el usuario va escribiendo
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [errors, setErrors] = useState<LoginErrors>({});
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Validación visual: campos obligatorios
-        const nextErrors: LoginErrors = {};
-        if (!email.trim()) nextErrors.email = 'Ingresa tu correo.';
-        if (!password.trim()) nextErrors.password = 'Ingresa tu contraseña.';
-        setErrors(nextErrors);
-
-        // Si no hay errores, redirigimos. replace: el login no queda en el historial
-        if (Object.keys(nextErrors).length === 0) {
-            router.replace('/routines');
-        }
+        // Sin validaciones aquí: las reglas viven en LoginUseCase
+        await onSubmit({ email, password });
     };
 
     return (
@@ -47,6 +38,12 @@ export function LoginForm() {
                 </>
             }
         >
+            {errorMessage && (
+                <div role="alert" className="alert alert-error alert-soft text-sm">
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-2">
                 <TextField
                     label="Correo"
@@ -56,7 +53,8 @@ export function LoginForm() {
                     placeholder="tu@correo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    error={errors.email}
+                    disabled={isLoading}
+                    error={fieldErrors.email}
                 />
 
                 <TextField
@@ -67,11 +65,13 @@ export function LoginForm() {
                     placeholder="••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    error={errors.password}
+                    disabled={isLoading}
+                    error={fieldErrors.password}
                 />
 
-                <button type="submit" className="btn btn-primary w-full mt-2">
-                    Iniciar sesión
+                <button type="submit" disabled={isLoading} className="btn btn-primary w-full mt-2">
+                    {isLoading ? <span className="loading loading-spinner loading-sm"></span> : null}
+                    {isLoading ? 'Ingresando...' : 'Iniciar sesión'}
                 </button>
             </form>
         </AuthCard>

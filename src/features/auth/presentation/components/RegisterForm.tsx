@@ -3,73 +3,53 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { TextField } from '@/src/core/components/ui/TextField';
+import { FieldErrors } from '@/src/core/errors/validation.error';
+import { RegisterInput } from '../../domain/usecases/register.usecase';
 import { AuthCard } from './AuthCard';
 
-interface RegisterValues {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
+interface RegisterFormProps {
+    onSubmit: (input: RegisterInput) => Promise<boolean>;
+    onFieldChange: (field: string) => void;
+    isLoading: boolean;
+    fieldErrors: FieldErrors;
+    errorMessage: string | null;
 }
 
-type RegisterErrors = Partial<Record<keyof RegisterValues, string>>;
-
-const INITIAL_VALUES: RegisterValues = {
+const INITIAL_VALUES: RegisterInput = {
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
 };
 
-// Validación visual: campos obligatorios y contraseñas iguales
-const validate = (values: RegisterValues): RegisterErrors => {
-    const errors: RegisterErrors = {};
-    if (!values.name.trim()) errors.name = 'Ingresa tu nombre.';
-    if (!values.email.trim()) errors.email = 'Ingresa tu correo.';
-    if (!values.password) errors.password = 'Ingresa una contraseña.';
-    if (!values.confirmPassword) {
-        errors.confirmPassword = 'Confirma tu contraseña.';
-    } else if (values.confirmPassword !== values.password) {
-        errors.confirmPassword = 'Las contraseñas no coinciden.';
-    }
-    return errors;
-};
-
-export function RegisterForm() {
-    // Estado local del formulario (no hay backend ni registro real)
-    const [values, setValues] = useState<RegisterValues>(INITIAL_VALUES);
-    const [errors, setErrors] = useState<RegisterErrors>({});
-    const [submitted, setSubmitted] = useState(false);
+export function RegisterForm({
+    onSubmit,
+    onFieldChange,
+    isLoading,
+    fieldErrors,
+    errorMessage,
+}: RegisterFormProps) {
+    // Estado local: solo lo que el usuario va escribiendo
+    const [values, setValues] = useState<RegisterInput>(INITIAL_VALUES);
     const [success, setSuccess] = useState(false);
 
     // Un solo handler para todos los inputs: usa el atributo `name` de cada uno
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const nextValues = { ...values, [e.target.name]: e.target.value };
-        setValues(nextValues);
+        const { name, value } = e.target;
+        setValues({ ...values, [name]: value });
         setSuccess(false);
-        // Después del primer intento, los errores se actualizan mientras escribe
-        if (submitted) setErrors(validate(nextValues));
+        onFieldChange(name); // el error de ese campo desaparece mientras lo corrige
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitted(true);
-
-        const nextErrors = validate(values);
-        setErrors(nextErrors);
-
-        if (Object.keys(nextErrors).length === 0) {
-            setSuccess(true);
+        // Sin validaciones aquí: las reglas viven en RegisterUseCase
+        const created = await onSubmit(values);
+        if (created) {
             setValues(INITIAL_VALUES);
-            setSubmitted(false);
+            setSuccess(true);
         }
     };
-
-    // Aviso inmediato si la confirmación no coincide, aun antes de enviar
-    const passwordsMismatch =
-        values.confirmPassword !== '' && values.confirmPassword !== values.password;
-    const confirmError =
-        errors.confirmPassword ?? (passwordsMismatch ? 'Las contraseñas no coinciden.' : undefined);
 
     return (
         <AuthCard
@@ -95,6 +75,12 @@ export function RegisterForm() {
                 </div>
             )}
 
+            {errorMessage && (
+                <div role="alert" className="alert alert-error alert-soft text-sm">
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-2">
                 <TextField
                     label="Nombre"
@@ -103,7 +89,8 @@ export function RegisterForm() {
                     placeholder="Tu nombre"
                     value={values.name}
                     onChange={handleChange}
-                    error={errors.name}
+                    disabled={isLoading}
+                    error={fieldErrors.name}
                 />
 
                 <TextField
@@ -114,7 +101,8 @@ export function RegisterForm() {
                     placeholder="tu@correo.com"
                     value={values.email}
                     onChange={handleChange}
-                    error={errors.email}
+                    disabled={isLoading}
+                    error={fieldErrors.email}
                 />
 
                 <TextField
@@ -125,7 +113,8 @@ export function RegisterForm() {
                     placeholder="••••••"
                     value={values.password}
                     onChange={handleChange}
-                    error={errors.password}
+                    disabled={isLoading}
+                    error={fieldErrors.password}
                 />
 
                 <TextField
@@ -136,11 +125,13 @@ export function RegisterForm() {
                     placeholder="Repite la contraseña"
                     value={values.confirmPassword}
                     onChange={handleChange}
-                    error={confirmError}
+                    disabled={isLoading}
+                    error={fieldErrors.confirmPassword}
                 />
 
-                <button type="submit" className="btn btn-primary w-full mt-2">
-                    Crear cuenta
+                <button type="submit" disabled={isLoading} className="btn btn-primary w-full mt-2">
+                    {isLoading ? <span className="loading loading-spinner loading-sm"></span> : null}
+                    {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
                 </button>
             </form>
         </AuthCard>
