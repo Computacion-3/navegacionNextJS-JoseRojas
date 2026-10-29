@@ -1,7 +1,10 @@
+export type RoutineCategory = 'STRENGTH' | 'HYPERTROPHY' | 'ENDURANCE';
+
 export interface RoutineProps {
     readonly id: number;
     readonly name: string;
     readonly description?: string;
+    readonly category?: RoutineCategory;
     readonly createdAt: Date;
 }
 
@@ -9,6 +12,7 @@ export class Routine {
     readonly id: number;
     readonly name: string;
     readonly description?: string;
+    readonly category?: RoutineCategory;
     readonly createdAt: Date;
 
     constructor(props: RoutineProps) {
@@ -16,6 +20,7 @@ export class Routine {
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;
+        this.category = props.category;
         this.createdAt = props.createdAt;
     }
 

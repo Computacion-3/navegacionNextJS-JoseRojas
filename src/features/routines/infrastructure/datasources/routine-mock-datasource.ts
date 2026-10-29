@@ -7,20 +7,23 @@ export class RoutineMockDatasource implements RoutineDatasource {
     private routines: RoutineResponseDto[] = [
         {
             id: 1,
-            name: 'Torso Fuerza e Hipertrofia',
-            description: 'Rutina de tren superior enfocada en empujes y tracciones pesadas.',
+            name: 'Pierna pesada',
+            description: 'Sentadilla, peso muerto y zancadas',
+            category: 'strength',
             created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // Hace 3 días
         },
         {
             id: 2,
-            name: 'Pierna Completa e Isquios',
-            description: 'Rutina de tren inferior con énfasis en sentadilla libre y peso muerto.',
+            name: 'Torso y brazos',
+            description: 'Press banca, remo y dominadas',
+            category: 'hypertrophy',
             created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // Hace 2 días
         },
         {
             id: 3,
-            name: 'Full Body Funcional',
-            description: 'Circuito metabólico de cuerpo completo para resistencia y quema calórica.',
+            name: 'Cardio suave',
+            description: 'Bicicleta y caminata inclinada',
+            category: 'endurance',
             created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // Hace 12 horas
         },
     ];
@@ -46,6 +49,7 @@ export class RoutineMockDatasource implements RoutineDatasource {
             id: nextId,
             name: dto.name,
             description: dto.description,
+            category: null,
             created_at: new Date().toISOString(),
         };
 

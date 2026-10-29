@@ -9,7 +9,7 @@ import { CreateRoutineParams } from '../../domain/repositories/routine.repositor
  * Hook fachada (Presentation Layer).
  * 
  * Actúa como adaptador entre los componentes de React y el Store de Redux:
- * 1. Oculta los detalles de Redux a los componentes visuales (RoutineForm, RoutineCard).
+ * 1. Oculta los detalles de Redux a los componentes visuales (RoutineSummaryCard).
  * 2. Mantiene exactamente la misma API pública que tenía con useState.
  */
 export function useRoutines() {
